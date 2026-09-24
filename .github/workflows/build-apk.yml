@@ -1,0 +1,34 @@
+name: Build Senerita Eats APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract project
+        run: |
+          mkdir project
+          unzip -q SeneritaEats_FINAL_v1.0.0.zip -d project
+          find project -name gradlew -type f -exec chmod +x {} \;
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build APK
+        working-directory: project/SeneritaEatsFinal
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Senerita-Eats-APK
+          path: project/SeneritaEatsFinal/app/build/outputs/apk/debug/app-debug.apk
