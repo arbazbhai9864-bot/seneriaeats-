@@ -1,0 +1,63 @@
+name: Build Senerita Eats APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check Android project
+        shell: bash
+        run: |
+          set -e
+
+          echo "Checking project folder..."
+          ls -la project
+
+          GRADLEW=$(find project -name gradlew -type f | head -n 1)
+
+          if [ -z "$GRADLEW" ]; then
+            echo "ERROR: gradlew not found"
+            find project -maxdepth 4 -type f | head -100
+            exit 1
+          fi
+
+          chmod +x "$GRADLEW"
+
+          echo "Gradle wrapper found:"
+          echo "$GRADLEW"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build APK
+        shell: bash
+        run: |
+          set -e
+
+          GRADLEW=$(find project -name gradlew -type f | head -n 1)
+
+          cd "$(dirname "$GRADLEW")"
+
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Find APK
+        shell: bash
+        run: |
+          echo "Generated APK:"
+          find project -type f -path '*/build/outputs/apk/debug/*.apk' -print
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Senerita-Eats-APK
+          path: project/**/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
